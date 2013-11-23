@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="user-scalable=no, 
+		initial-scale=1, 
+		maximum-scale=1, 
+		minimum-scale=1,
+		width=device-width, 
+		height=device-height, 
+		target-densitydpi=device-dpi" />
+		
+	<style>
+		body {
+			font-size: 24px;
+		}
+		input, button {
+			28px;
+		}
+	</style>
+</head>
+<body>
+	<h1>WebSQL</h1>
+	<label>姓名name:</label><br/>
+	<input type="text" id="name" size="10"> <br/>
+	<label>Email:</label><br/>
+	<input type="text" id="email" size="20">
+	<br/>
+	<button type="button" onclick="insert()">新增insert</button>
+	<button type="button" onclick="del()">刪除del</button><br/>
+	<button type="button" onclick="update()">更新update Email</button> 
+	<button type="button" onclick="select()">列表select</button> 
+	<br/> <br/>
+	<button type="button" onclick="deleteDB()">刪除del DB</button>
+	
+	<div id="data"></div>
+	
+	<script type="text/javascript" src="phonegap.js"></script>
+	<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+	<script type="text/javascript" charset="utf-8">
+	var db;
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+		db = window.openDatabase("mydb", "1.0", "練習practice", (5 * 1024) * 1024 );
+		db.transaction(createDB, onError, onSuccess);        
+    }
+	
+    function createDB(tx) {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS users (id unique, name string, email string)');
+    };
+	function insert(){
+		db.transaction(function(tx){
+			var name = $("#name").val();
+			var email = $("#email").val();
+			var SQL = 'INSERT INTO users (name, email) VALUES ("'+name+'","'+email+'")';
+			tx.executeSql(SQL, [], function(d, results){
+				console.log(results);
+			});
+		}, onError, onSuccess);
+	};
+	function del(){
+		db.transaction(function(tx){
+			var name = $("#name").val();
+			var SQL = 'DELETE FROM users WHERE name="'+name+'"';
+			tx.executeSql(SQL);
+		}, onError, onSuccess);
+	};
+	function update(){
+		db.transaction(function(tx){
+			var name = $("#name").val();
+			var email = $("#email").val();
+			var SQL = 'UPDATE users SET email="'+email+'" WHERE name="'+name+'"';
+			tx.executeSql(SQL, [], function(d, results){
+				console.log(results);
+			});
+		}, onError, onSuccess);	
+	};
+	function select(){
+		db.transaction(function(tx){
+			var SQL = 'SELECT * FROM users';
+			tx.executeSql(SQL, [], function(d, results){   
+			            //SQL為語法, []為參數, d為callback fun.,裡面是transaction物件 巢狀寫法
+				if(results.rows.length > 0){
+					console.log(results);
+					$("#data").html('');
+					for(var i=0; i < results.rows.length; i++){
+						var o = results.rows.item(i);
+						$("#data").append(o.name + ' ' + o.email + '<br/>');
+					};
+					
+				}
+			});
+		}, onError, function(){});	
+	};
+	function deleteDB(){
+		db.transaction(function(tx){
+			var SQL = 'DROP TABLE IF EXISTS users';
+			tx.executeSql(SQL);
+		}, onError, onSuccess);
+	};
+    function onError(tx, err) {
+        alert("錯誤 error: "+err);
+    };
+    function onSuccess() {
+        alert("完成 Success");
+    };
+    </script>
+</body>
+</html>
